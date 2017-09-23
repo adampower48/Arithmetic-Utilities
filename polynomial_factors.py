@@ -3,6 +3,8 @@ import tokenize
 from io import StringIO
 from math import sqrt
 
+from polynomial_base import *
+
 
 def get_divisors(n):
     divisors = set()
@@ -31,6 +33,10 @@ def get_real_roots(_eq):
     return _roots
 
 
+def divide_poly(equation, divisor):
+    pass
+
+
 # Expressions to be factored
 # Must be in terms of x only. Must use python expression syntax. No brackets.
 # Must end with a constant. All coefficients must be integers.
@@ -42,3 +48,12 @@ equations = ["x ** 3 - 2 * x ** 2 - 29 * x + 30",
 for e in equations:
     print(e, "Roots:", get_real_roots(e), sep="\t")
     print()
+
+t1 = Term(1, 2)
+t2 = Term(5, -3)
+t3 = Term(6, 2)
+x3 = t1 * t2
+x4 = t1 + t3
+
+print(t1, "*", t2, "=", x3)
+print(t1, "+", t3, "=", x4)
