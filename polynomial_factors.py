@@ -57,3 +57,29 @@ x4 = t1 + t3
 
 print(t1, "*", t2, "=", x3)
 print(t1, "+", t3, "=", x4)
+
+f1 = Fraction(1, 3)
+f2 = Fraction(2, 5)
+g1 = f1 + f2
+g2 = f1 - f2
+g3 = f1 * f2
+g4 = f1 / f2
+
+print(f1, "+", f2, "=", g1)
+print(f1, "-", f2, "=", g2)
+print(f1, "*", f2, "=", g3)
+print(f1, "/", f2, "=", g4)
+
+ft1 = Term(Fraction(1, 3), Fraction(4, 5))
+ft2 = Term(Fraction(5, 7), Fraction(4, 5))
+print("ft1:", ft1)
+print("ft2:", ft2)
+
+gt1 = ft1 + ft2
+gt2 = ft1 * ft2
+gt3 = ft1 - ft2
+gt4 = ft1 / ft2
+print(ft1, "+", ft2, "=", gt1)
+print(ft1, "*", ft2, "=", gt2)
+print(ft1, "-", ft2, "=", gt3)
+print(ft1, "/", ft2, "=", gt4)

@@ -1,6 +1,6 @@
 # ax^p      All terms must be integers
 class Term:
-    def __init__(self, coeff=1, exp=1, var_name="x"):
+    def __init__(self, coeff, exp, var_name="x"):
         self.coefficient = coeff
         self.exponent = exp
         self.var_name = var_name
@@ -8,6 +8,9 @@ class Term:
 
     def __mul__(self, other):
         return Term(self.coefficient * other.coefficient, self.exponent + other.exponent)
+
+    def __truediv__(self, other):
+        return Term(self.coefficient / other.coefficient, self.exponent - other.exponent)
 
     def __add__(self, other):
         if self.exponent != other.exponent:
@@ -18,8 +21,16 @@ class Term:
 
         return Term(self.coefficient + other.coefficient, self.exponent)
 
+    def __sub__(self, other):
+        return self.__add__(-other)
+
+    def __neg__(self):
+        return Term(-self.coefficient, self.exponent, self.var_name)
+
     def __repr__(self):
-        return "{}{}*{}**{}".format("+" if self.is_positive else "", self.coefficient, self.var_name, self.exponent)
+        return "{}*{}**{}".format(self.coefficient if type(self.coefficient) == int else "({})".format(
+            self.coefficient), self.var_name,
+                                  self.exponent if type(self.exponent) == int else "({})".format(self.exponent))
 
 
 # a/b       All terms must be integers
@@ -31,6 +42,9 @@ class Fraction:
     def __mul__(self, other):
         return Fraction(self.numerator * other.numerator, self.denominator * other.denominator)
 
+    def __truediv__(self, other):
+        return Fraction(self.numerator * other.denominator, other.numerator * self.denominator)
+
     def __add__(self, other):
         return Fraction(self.numerator * other.denominator + other.numerator * self.denominator,
                         self.denominator * other.denominator)
@@ -41,5 +55,23 @@ class Fraction:
     def __neg__(self):
         return Fraction(-self.numerator, self.denominator)
 
-    def decimal_value(self):
+    def __repr__(self):
+        return "{} / {}".format(self.numerator, self.denominator)
+
+    def __lt__(self, other):
+        return self.__float__() < other
+
+    def __gt__(self, other):
+        return self.__float__() > other
+
+    def __le__(self, other):
+        return self.__float__() <= other
+
+    def __ge__(self, other):
+        return self.__float__() >= other
+
+    def __eq__(self, other):
+        return self.__float__() == other
+
+    def __float__(self):
         return self.numerator / self.denominator
