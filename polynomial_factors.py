@@ -36,7 +36,8 @@ def get_real_roots(_eq):
 # Must end with a constant. All coefficients must be integers.
 equations = ["x ** 3 - 2 * x ** 2 - 29 * x + 30",
              "x ** 4 - 3 * x ** 3 + 6 * x ** 2 - 12 * x + 8",
-             "x ** 3 - 2 * x ** 2 + 2 * x - 4"]
+             "x ** 3 - 2 * x ** 2 + 2 * x - 4",
+             "x ** 2 + 4 * x + 4"]
 
 for e in equations:
     print(e, "Roots:", get_real_roots(e), sep="\t")
