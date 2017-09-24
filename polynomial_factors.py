@@ -45,9 +45,9 @@ equations = ["x ** 3 - 2 * x ** 2 - 29 * x + 30",
              "x ** 3 - 2 * x ** 2 + 2 * x - 4",
              "x ** 2 + 4 * x + 4"]
 
-for e in equations:
-    print(e, "Roots:", get_real_roots(e), sep="\t")
-    print()
+# for e in equations:
+#     print(e, "Roots:", get_real_roots(e), sep="\t")
+#     print()
 
 t1 = Term(1, 2)
 t2 = Term(5, -3)
@@ -55,37 +55,25 @@ t3 = Term(6, 2)
 x3 = t1 * t2
 x4 = t1 + t3
 
-print(t1, "*", t2, "=", x3)
-print(t1, "+", t3, "=", x4)
-
 f1 = Fraction(1, 3)
 f2 = Fraction(2, 5)
-g1 = f1 + f2
-g2 = f1 - f2
-g3 = f1 * f2
-g4 = f1 / f2
 
-print(f1, "+", f2, "=", g1)
-print(f1, "-", f2, "=", g2)
-print(f1, "*", f2, "=", g3)
-print(f1, "/", f2, "=", g4)
 
 ft1 = Term(Fraction(1, 3), Fraction(4, 5))
 ft2 = Term(Fraction(5, 7), Fraction(4, 5))
-print("ft1:", ft1)
-print("ft2:", ft2)
+ft3 = Term(Fraction(11, 3), Fraction(4, 8))
 
-gt1 = ft1 + ft2
-gt2 = ft1 * ft2
-gt3 = ft1 - ft2
-gt4 = ft1 / ft2
-print(ft1, "+", ft2, "=", gt1)
-print(ft1, "*", ft2, "=", gt2)
-print(ft1, "-", ft2, "=", gt3)
-print(ft1, "/", ft2, "=", gt4)
-
-e1 = Expression(ft1, ft2, gt1)
+e1 = Expression(ft1, ft2, ft3)
 print("e1:", e1)
+e2 = e1 + ft1
+print("e2:", e2)
+e3 = e1 - e2
+print("e3:", e3)
+
+e4 = Expression(Term(1, 1), Term(1, 0))
+e5 = Expression(Term(1, 1), Term(1, 0))
+e6 = e4 * e5
+print("e6:", e6)
 
 f3 = Fraction(Fraction((Fraction(2, 11)), 3), Fraction(5, 7))
 print(f3)
