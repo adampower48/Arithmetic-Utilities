@@ -83,3 +83,9 @@ print(ft1, "+", ft2, "=", gt1)
 print(ft1, "*", ft2, "=", gt2)
 print(ft1, "-", ft2, "=", gt3)
 print(ft1, "/", ft2, "=", gt4)
+
+e1 = Expression(ft1, ft2, gt1)
+print("e1:", e1)
+
+f3 = Fraction(Fraction((Fraction(2, 11)), 3), Fraction(5, 7))
+print(f3)
