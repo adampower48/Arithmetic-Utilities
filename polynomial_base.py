@@ -1,3 +1,5 @@
+from sys import stderr
+
 from number_functions import greatest_common_divisor as gcd
 
 
@@ -10,10 +12,21 @@ class Term:
         self.is_positive = coeff >= 0
 
     def __mul__(self, other):
+        if type(other) == int:
+            return Term(self.coefficient * other, self.exponent)
         return Term(self.coefficient * other.coefficient, self.exponent + other.exponent)
 
+    def __rmul__(self, other):
+        return self * other
+
     def __truediv__(self, other):
-        return Term(self.coefficient / other.coefficient, self.exponent - other.exponent)
+        if type(other) in [int, Fraction]:
+            return Term(Fraction(self.coefficient, other), self.exponent)
+        return Term(Fraction(self.coefficient, other.coefficient), self.exponent - other.exponent)
+
+    def __rtruediv__(self, other):
+        if type(other) in [int, Fraction]:
+            return Term(other, 0, self.var_name) / self
 
     def __add__(self, other):
         if other == 0:
@@ -85,10 +98,25 @@ class Fraction:
         return hash((self.numerator, self.denominator))
 
     def __mul__(self, other):
+        if type(other) == float or type(other) == int:
+            return Fraction(self.numerator * other, self.denominator)
+
+        if type(other) == Irrational:
+            return Irrational(self * other.coefficient, other.base, other.exponent)
+
         return Fraction(self.numerator * other.numerator, self.denominator * other.denominator)
 
+    def __rmul__(self, other):
+        return self * other
+
     def __truediv__(self, other):
-        return Fraction(self.numerator * other.denominator, other.numerator * self.denominator)
+        if type(other) == Fraction:
+            return Fraction(self.numerator * other.denominator, other.numerator * self.denominator)
+        if type(other) == Term:
+            return other.__rtruediv__(self)
+
+    def __pow__(self, power, modulo=None):
+        return Fraction(self.numerator ** power, self.denominator ** power)
 
     def __add__(self, other):
         if type(other) == int:
@@ -104,6 +132,8 @@ class Fraction:
         return Fraction(-self.numerator, self.denominator)
 
     def __repr__(self):
+        if self.denominator == 1:
+            return str(self.numerator)
         return "{} / {}".format(self.numerator, self.denominator)
 
     def __lt__(self, other):
@@ -128,9 +158,18 @@ class Fraction:
         return self.numerator / self.denominator
 
     def simplify(self):
+        # 2/6   ->  1/3
         div = gcd(self.numerator, self.denominator)
         self.numerator //= div
         self.denominator //= div
+
+        # Ensures - sign is on top of fraction if negative  12/-5   ->  -12/5
+        if self.numerator / self.denominator < 0 and self.denominator < 0:
+            self.numerator *= -1
+            self.denominator *= -1
+
+            # if self.denominator == 1:
+            #     print(self, "can be converted to", self.numerator)
 
 
 # Sequence of terms
@@ -158,6 +197,8 @@ class Expression:
 
         return Expression(*terms)
 
+    # TODO: division
+
     def __neg__(self):
         return Expression(*[-t for t in self.terms])
 
@@ -174,3 +215,100 @@ class Expression:
                     terms.append(sum(tmp_terms))
 
         self.terms = terms
+
+
+# a^b
+class Irrational:
+    def __init__(self, coeff, base, exponent):
+        self.base = base
+        self.exponent = exponent
+        self.coefficient = coeff
+
+    def __add__(self, other):
+        if type(other) == Irrational and other.base == self.base and other.exponent == self.exponent:
+            return Irrational(self.coefficient + other.coefficient, self.base, self.exponent)
+
+        print("Unsupported operation add for: {}, {}".format(self, other), file=stderr)
+
+    def __sub__(self, other):
+        return self.__add__(-other)
+
+    def __neg__(self):
+        return Irrational(-self.coefficient, self.base, self.exponent)
+
+    def __mul__(self, other):
+        if type(other) == Irrational:
+            if other.exponent == self.exponent:
+                return Irrational(self.coefficient * other.coefficient, self.base * other.base, self.exponent)
+            if other.base == self.base:
+                return Irrational(self.coefficient * other.coefficient, self.base, self.exponent + other.exponent)
+
+        if type(other) == int or type(other) == Fraction:
+            return Irrational(self.coefficient * other, self.base, self.exponent)
+
+    def __truediv__(self, other):
+        if type(other) == Irrational:
+            if other.exponent == self.exponent:
+                return Irrational(Fraction(self.coefficient, other.coefficient), Fraction(self.base, other.base),
+                                  self.exponent)
+
+            if other.base == self.base:
+                return Irrational(Fraction(self.coefficient, other.coefficient), self.base,
+                                  self.exponent - other.exponent)
+
+        if type(other) == int or type(other) == Fraction:
+            return Irrational(Fraction(self.coefficient, other), self.base, self.exponent)
+
+    def __pow__(self, power, modulo=None):
+        if type(power) == Fraction or type(power) == Irrational:
+            new_coeff = Irrational(1, self.coefficient, power)
+        elif power < 0:
+            new_coeff = Fraction(1, self.coefficient ** -power)
+        else:
+            new_coeff = self.coefficient ** power
+
+        return Irrational(new_coeff, self.base, self.exponent * power)
+
+    def __lt__(self, other):
+        return self.__float__() < other
+
+    def __gt__(self, other):
+        return self.__float__() > other
+
+    def __le__(self, other):
+        return self.__float__() <= other
+
+    def __ge__(self, other):
+        return self.__float__() >= other
+
+    def __eq__(self, other):
+        return self.__float__() == other
+
+    def __ne__(self, other):
+        return self.__float__() != other
+
+    def __float__(self):
+        return self.coefficient * self.base ** float(self.exponent)
+
+    def __repr__(self):
+        sign = "+" if self.coefficient >= 0 else ""
+
+        if type(self.coefficient) == int:
+            coeff = "" if self.coefficient == 1 and self.exponent != 0 else "{}*".format(self.coefficient)
+        else:
+            coeff = "" if self.coefficient == 1 and self.exponent != 0 else "({})*".format(self.coefficient)
+
+        var = self.base if type(self.base) == int else "({})".format(self.base)
+
+        if type(self.exponent) == int:
+            exp = "" if self.exponent == 0 else self.exponent
+        else:
+            exp = "({})".format(self.exponent)
+
+        if self.coefficient == 0:
+            return "+0"
+
+        if self.base == 1 or self.exponent == 0:
+            return "{}{}".format(sign, self.coefficient)
+
+        return "{}{}{}{}{}".format(sign, coeff, var, "^" if self.exponent != 0 else "", exp)
