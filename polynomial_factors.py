@@ -4,6 +4,9 @@ from io import StringIO
 from math import sqrt
 
 
+# TODO: gcd of Terms eg. x^4, x^3   -> x^3
+
+
 def get_divisors(n):
     divisors = set()
     for i in range(1, int(sqrt(abs(n)) + 1)):

@@ -5,28 +5,47 @@ from number_functions import greatest_common_divisor as gcd
 
 # ax^p      All terms must be integers
 class Term:
-    def __init__(self, coeff, exp, var_name="x"):
+    # TODO: Add support for multiple bases eg. x^2 * y^2
+    def __init__(self, coeff, base, exponent):
         self.coefficient = coeff
-        self.exponent = exp
-        self.var_name = var_name
-        self.is_positive = coeff >= 0
+        self.exponent = exponent
+        self.base = base if base else "x"
 
     def __mul__(self, other):
-        if type(other) == int:
-            return Term(self.coefficient * other, self.exponent)
-        return Term(self.coefficient * other.coefficient, self.exponent + other.exponent)
+        if type(other) in (int, Fraction):
+            return Term(self.coefficient * other, self.base, self.exponent)
+
+        if self.base == other.base:
+            return Term(self.coefficient * other.coefficient, self.base, self.exponent + other.exponent)
+
+        print("Operation mul not supported for: {}, {}".format(self, other), file=stderr)
 
     def __rmul__(self, other):
         return self * other
 
     def __truediv__(self, other):
         if type(other) in [int, Fraction]:
-            return Term(Fraction(self.coefficient, other), self.exponent)
-        return Term(Fraction(self.coefficient, other.coefficient), self.exponent - other.exponent)
+            return Term(Fraction(self.coefficient, other), self.base, self.exponent)
+
+        if type(other) in Term.__subclasses__():
+            if self.base == other.base:
+                return Term(Fraction(self.coefficient, other.coefficient), self.base, self.exponent - other.exponent)
+
+        print("Operation truediv is not supported for: {}, {}".format(self, other), file=stderr)
 
     def __rtruediv__(self, other):
         if type(other) in [int, Fraction]:
-            return Term(other, 0, self.var_name) / self
+            return Term(other, self.base, 0) / self
+
+        print("Operation rtruediv is not supported for: {}, {}".format(self, other), file=stderr)
+
+    def __pow__(self, power, modulo=None):
+        if type(power) == int and power < 0:
+            new_coeff = Fraction(1, self.coefficient ** -power)
+        else:
+            new_coeff = Term(1, self.coefficient, power)
+
+        return Term(new_coeff, self.base, self.exponent * power)
 
     def __add__(self, other):
         if other == 0:
@@ -35,10 +54,10 @@ class Term:
         if self.exponent != other.exponent:
             raise ArithmeticError("Can't add terms of differing exponents: {}, {}".format(self, other))
 
-        if self.var_name != other.var_name:
+        if self.base != other.base:
             raise ArithmeticError("Can't add terms of differing bases: {}, {}".format(self, other))
 
-        return Term(self.coefficient + other.coefficient, self.exponent)
+        return Term(self.coefficient + other.coefficient, self.base, self.exponent)
 
     def __radd__(self, other):
         return self + other
@@ -47,11 +66,11 @@ class Term:
         return self.__add__(-other)
 
     def __neg__(self):
-        return Term(-self.coefficient, self.exponent, self.var_name)
+        return Term(-self.coefficient, self.base, self.exponent)
 
     def __eq__(self, other):
         if type(other) == Term:
-            return self.coefficient == other.coefficient and self.exponent == other.exponent
+            return (self.coefficient, self.base, self.exponent) == (other.coefficient, other.base, other.exponent)
 
         if self.exponent == 0:
             return self.coefficient == other
@@ -62,19 +81,45 @@ class Term:
         return False
 
     def __repr__(self):
-        sign = "+" if self.coefficient >= 0 else ""
-
+        # FORMATTING
+        # Sign
         if type(self.coefficient) == int:
-            coeff = "" if self.coefficient == 1 and self.exponent != 0 else self.coefficient
+            sign = "+" if self.coefficient >= 0 else ""
+        elif type(self.coefficient) == Fraction:
+            if type(self.coefficient.numerator) == int and type(self.coefficient.denominator) == int:
+                sign = "+" if self.coefficient >= 0 else ""
+            else:
+                sign = ""
         else:
-            coeff = "({})".format(self.coefficient)
+            sign = ""
 
-        var = "" if self.exponent == 0 else self.var_name
+        # Coefficient
+        if type(self.coefficient) == int:
+            coeff = "" if self.coefficient == 1 and self.exponent != 0 else "{}".format(self.coefficient)
+        else:
+            coeff = "" if self.coefficient == 1 and self.exponent != 0 else "({})".format(self.coefficient)
 
+        # Variable/base
+        if type(self.base) == str:
+            var = self.base
+        elif type(self.base) in (Fraction, *Term.__subclasses__()):
+            var = "*({})".format(self.base)
+        else:
+            var = "*{}".format(self.base)
+
+        # Exponent
         if type(self.exponent) == int:
             exp = "" if self.exponent == 0 else self.exponent
         else:
             exp = "({})".format(self.exponent)
+
+        # END FORMATTING
+        # Return statements
+        if self.coefficient == 0:
+            return "+0"
+
+        if self.base == 1 or self.exponent == 0:
+            return "{}{}".format(sign, self.coefficient)
 
         return "{}{}{}{}{}".format(sign, coeff, var, "^" if self.exponent != 0 else "", exp)
 
@@ -92,7 +137,8 @@ class Fraction:
 
         self.numerator = numerator
         self.denominator = denominator
-        self.simplify()
+        if Term not in (type(numerator), type(denominator)):
+            self.simplify()
 
     def __hash__(self):
         return hash((self.numerator, self.denominator))
@@ -101,7 +147,7 @@ class Fraction:
         if type(other) == float or type(other) == int:
             return Fraction(self.numerator * other, self.denominator)
 
-        if type(other) == Irrational:
+        if type(other) in [Term, *Term.__subclasses__()]:
             return Irrational(self * other.coefficient, other.base, other.exponent)
 
         return Fraction(self.numerator * other.numerator, self.denominator * other.denominator)
@@ -158,6 +204,7 @@ class Fraction:
         return self.numerator / self.denominator
 
     def simplify(self):
+        # TODO: simplify for Fractions with Terms.
         # 2/6   ->  1/3
         div = gcd(self.numerator, self.denominator)
         self.numerator //= div
@@ -218,56 +265,10 @@ class Expression:
 
 
 # a^b
-class Irrational:
+
+class Irrational(Term):
     def __init__(self, coeff, base, exponent):
-        self.base = base
-        self.exponent = exponent
-        self.coefficient = coeff
-
-    def __add__(self, other):
-        if type(other) == Irrational and other.base == self.base and other.exponent == self.exponent:
-            return Irrational(self.coefficient + other.coefficient, self.base, self.exponent)
-
-        print("Unsupported operation add for: {}, {}".format(self, other), file=stderr)
-
-    def __sub__(self, other):
-        return self.__add__(-other)
-
-    def __neg__(self):
-        return Irrational(-self.coefficient, self.base, self.exponent)
-
-    def __mul__(self, other):
-        if type(other) == Irrational:
-            if other.exponent == self.exponent:
-                return Irrational(self.coefficient * other.coefficient, self.base * other.base, self.exponent)
-            if other.base == self.base:
-                return Irrational(self.coefficient * other.coefficient, self.base, self.exponent + other.exponent)
-
-        if type(other) == int or type(other) == Fraction:
-            return Irrational(self.coefficient * other, self.base, self.exponent)
-
-    def __truediv__(self, other):
-        if type(other) == Irrational:
-            if other.exponent == self.exponent:
-                return Irrational(Fraction(self.coefficient, other.coefficient), Fraction(self.base, other.base),
-                                  self.exponent)
-
-            if other.base == self.base:
-                return Irrational(Fraction(self.coefficient, other.coefficient), self.base,
-                                  self.exponent - other.exponent)
-
-        if type(other) == int or type(other) == Fraction:
-            return Irrational(Fraction(self.coefficient, other), self.base, self.exponent)
-
-    def __pow__(self, power, modulo=None):
-        if type(power) == Fraction or type(power) == Irrational:
-            new_coeff = Irrational(1, self.coefficient, power)
-        elif power < 0:
-            new_coeff = Fraction(1, self.coefficient ** -power)
-        else:
-            new_coeff = self.coefficient ** power
-
-        return Irrational(new_coeff, self.base, self.exponent * power)
+        super(Irrational, self).__init__(coeff, base, exponent)
 
     def __lt__(self, other):
         return self.__float__() < other
@@ -289,26 +290,3 @@ class Irrational:
 
     def __float__(self):
         return self.coefficient * self.base ** float(self.exponent)
-
-    def __repr__(self):
-        sign = "+" if self.coefficient >= 0 else ""
-
-        if type(self.coefficient) == int:
-            coeff = "" if self.coefficient == 1 and self.exponent != 0 else "{}*".format(self.coefficient)
-        else:
-            coeff = "" if self.coefficient == 1 and self.exponent != 0 else "({})*".format(self.coefficient)
-
-        var = self.base if type(self.base) == int else "({})".format(self.base)
-
-        if type(self.exponent) == int:
-            exp = "" if self.exponent == 0 else self.exponent
-        else:
-            exp = "({})".format(self.exponent)
-
-        if self.coefficient == 0:
-            return "+0"
-
-        if self.base == 1 or self.exponent == 0:
-            return "{}{}".format(sign, self.coefficient)
-
-        return "{}{}{}{}{}".format(sign, coeff, var, "^" if self.exponent != 0 else "", exp)
