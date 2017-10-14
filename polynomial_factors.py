@@ -3,6 +3,9 @@ import tokenize
 from io import StringIO
 from math import sqrt
 
+from number_functions import greatest_common_divisor as gcd
+from polynomial_base import Term
+
 
 # TODO: gcd of Terms eg. x^4, x^3   -> x^3
 
@@ -16,6 +19,24 @@ def get_divisors(n):
     divisors.update([-x for x in divisors])  # Negative divisors
 
     return divisors
+
+
+# gcd of Terms
+def get_common_terms(a: Term, b: Term):
+    common_coeff = common_base = common_exp = 1
+
+    if type(a.coefficient) == int and type(b.coefficient) == int:
+        common_coeff = gcd(a.coefficient, b.coefficient)
+    else:
+        pass  # TODO: accommodate other types
+
+    if a.base == b.base:
+        common_base = a.base
+
+        if type(a.coefficient) == int and type(b.coefficient) == int:
+            common_exp = min(a.exponent, b.exponent)
+
+    return Term(common_coeff, common_base, common_exp)
 
 
 def get_real_roots(_eq):
