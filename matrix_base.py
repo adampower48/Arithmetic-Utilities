@@ -1,3 +1,6 @@
+from math import sqrt
+
+
 class Matrix:
     def __init__(self, rows):
         self.rows = list(rows)
@@ -86,21 +89,31 @@ class Matrix:
         return Matrix(new_rows)
 
 
+class Vector(Matrix):
+    def __init__(self, values):
+        super().__init__([[v] for v in values])
+
+    def magnitude(self):
+        return sqrt(sum(x[0] ** 2 for x in self.rows))
+
+    # Applicable for 3 dimensions only.
+    def cross_product(self, other):
+        assert len(self.rows) == len(other.rows) and len(self.rows[0]) == len(other.rows[0])
+
+        unit_vectors = get_unit_vectors(len(self.rows))
+        # todo: finish cross product
+
+
+def get_unit_vectors(dimensions):
+    vectors = [[0] * dimensions] * dimensions
+    for i, v in enumerate(vectors):
+        v[i] = 1
+
+    return vectors
+
+
 def read_matrix():
     m, n = map(int, input("Dimensions M N >").split())
     rows = [list(map(int, input("Row {}:".format(i + 1)).split())) for i in range(m)]
     print(*rows)
     return Matrix(rows)
-
-
-m1 = read_matrix()
-m2 = read_matrix()
-# m3 = read_matrix()
-
-# print("AB =", m1 * m2, sep="\n")
-# print("BA =", m2 * m1, sep="\n")
-# print("A + B =", m1 + m2, sep="\n")
-# print("B + A =", m2 + m1, sep="\n")
-# print("3A =", m1 * 3, sep="\n")
-# print("A . B =", m1.dot_product(m2))
-print("A inverse:", m1.inverse(), sep="\n")
