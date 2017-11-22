@@ -27,7 +27,7 @@ class Term:
         if type(other) in [int, Fraction]:
             return Term(Fraction(self.coefficient, other), self.base, self.exponent)
 
-        if type(other) in Term.__subclasses__():
+        if type(other) in [Term, *Term.__subclasses__()]:
             if self.base == other.base:
                 return Term(Fraction(self.coefficient, other.coefficient), self.base, self.exponent - other.exponent)
 
@@ -95,7 +95,9 @@ class Term:
 
         # Coefficient
         if type(self.coefficient) == int:
-            coeff = "" if self.coefficient == 1 and self.exponent != 0 else "{}".format(self.coefficient)
+            coeff = "" if (self.coefficient == 1 or (type(
+                self.coefficient) == Fraction and self.coefficient.denominator == 1)) and self.exponent != 0 else "{}".format(
+                self.coefficient)
         else:
             coeff = "" if self.coefficient == 1 and self.exponent != 0 else "({})".format(self.coefficient)
 
