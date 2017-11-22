@@ -25,6 +25,40 @@ def insertion_sort(arr):
         i += 1
 
 
+def merge_sort(arr):
+    def merge(a, b):
+        result = []
+
+        i = 0
+        j = 0
+        len_a = len(a)
+        len_b = len(b)
+        while i < len_a and j < len_b:
+            if a[i] <= b[j]:
+                result.append(a[i])
+                i += 1
+            else:
+                result.append(b[j])
+                j += 1
+
+        result += a[i:]
+        result += b[j:]
+
+        return result
+
+    len_arr = len(arr)
+    if len_arr <= 1:
+        return arr
+
+    left = arr[:len_arr // 2]
+    right = arr[len_arr // 2:]
+
+    left = merge_sort(left)
+    right = merge_sort(right)
+
+    return merge(left, right)
+
+
 def first_n_smallest(arr, n):
     first = []
 
