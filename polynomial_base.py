@@ -267,7 +267,6 @@ class Expression:
 
 
 # a^b
-
 class Irrational(Term):
     def __init__(self, coeff, base, exponent):
         super(Irrational, self).__init__(coeff, base, exponent)
